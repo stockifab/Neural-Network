@@ -1,15 +1,20 @@
+from typing import Literal
+
 import numpy as np
 
 from src.network import Layer
 from src.network import Connection
 
+type Loss = Literal["binary_crossentropy", "categorical_crossentropy"]
+
 
 def cost_wrt_z(a: np.ndarray, y_true: np.ndarray):
-    return -2 * (y_true - a) * a * (1 - a)
+    return -(y_true - a)
 
 
 class Network:
-    def __init__(self, layers: list[Layer]):
+    def __init__(self, layers: list[Layer], loss: Loss = "binary_crossentropy"):
+        self.loss = loss
         self.__build_pipeline(layers)
 
     def __build_pipeline(self, layers: list[Layer]):
@@ -27,8 +32,11 @@ class Network:
         return last
 
     def cost(self, inp: np.ndarray, y_true: np.ndarray):
-        y_pred = self.run(inp)
-        return np.sum((y_pred - y_true) ** 2)
+        a = self.run(inp)
+        if self.loss == "binary_crossentropy":
+            return np.sum(-(y_true * np.log(a) + (1 - y_true) * np.log(1 - a)))
+        elif self.loss == "categorical_crossentropy":
+            return np.sum(-(y_true * np.log(a)))
 
     def fit(self, inp: np.ndarray, y_true, learning_rate: float = 0.01):
         y_true = np.array(y_true)
@@ -50,7 +58,11 @@ class Network:
                 if err is None:
                     err = cost_wrt_z(a, y_true)
                 else:
-                    err = err * a * (1 - a)
+                    if item.activation == "sigmoid":
+                        err = err * a * (1 - a)
+                    elif item.activation == "softmax":
+                        dot = np.sum(err * a, axis=1, keepdims=True)
+                        err = a * (err - dot)
 
                 item.biases -= learning_rate * err.mean(axis=0)
 
