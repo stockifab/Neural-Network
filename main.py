@@ -21,13 +21,12 @@ network = Network(
     [
         Layer(64, activation="input"),
         Layer(50),
-        Layer(30),
         Layer(10, activation="softmax"),
     ],
     loss="categorical_crossentropy",
 )
 
-network.fit(X_train, y_train, learning_rate=1, batch_size=0.1)
+network.fit(X_train, y_train, epochs=600, learning_rate=0.9, batch_size=0.1)
 
 print("Final Cost:", network.cost(X_train, y_train))
 

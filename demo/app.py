@@ -1,5 +1,3 @@
-# Note: this demo was vibe coded with Claude. The neural network itself (src/) was not.
-
 import sys
 from pathlib import Path
 
